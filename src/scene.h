@@ -32,6 +32,7 @@ class scene { //main class, used to render everything
 	matrix M_per;
 	matrix M_cam;
 	matrix M;
+	vect accel;
 	float r;
 	float l;
 	float t;
@@ -39,6 +40,9 @@ class scene { //main class, used to render everything
     float angle;
 	float nearDepth;
 	float farDepth;
+	float timeStep;
+	float mass;
+	float springConst;
 	float** z;
 	vect** data;
 	vect** gData;
@@ -48,6 +52,7 @@ class scene { //main class, used to render everything
 	vect** pLocs;
 	std::vector<light> lights;
 	std::vector<obj> objects;
+	std::vector<int> constraints;
 	std::vector<std::vector<color>> gColor;
 	std::vector<std::vector<color>> fColor;
 	std::vector<std::vector<color>> pColor;

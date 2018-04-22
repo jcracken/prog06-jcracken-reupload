@@ -158,6 +158,26 @@ void scene::acquireData(std::string name) {
 						}
 					}
 				break;
+				case 'h':
+					iss >> timeStep;
+				break;
+				case 'm':
+					iss >> mass;
+				break;
+				case 'k':
+					iss >> springConst;
+				break;
+				case 'a':
+					iss >> temp[0] >> temp[1] >> temp[2];
+					accel = vect(temp[0], temp[1], temp[2]);
+				break;
+				case 'C':
+					iss >> temp[0];
+					for (int i = 0; i < temp[0]; i++) {
+						iss >> temp[1];
+						constraints.push_back(temp[1]);
+					}
+				break;
 				default: //there's a line that doesn't make any sense
 					std::cout << "input file malformed" << std::endl;
 					exit(EXIT_FAILURE);

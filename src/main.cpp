@@ -47,6 +47,7 @@ int main(int argc, char** argv){
 	ppm* image = new ppm();
 	scene* sc = new scene();
 	bool up = false; //update image?
+	bool single = false; //update a single frame or animate
 	int type = 0; //type of shading
 
 	//populate ppm
@@ -137,16 +138,26 @@ int main(int argc, char** argv){
 				quit = true;
 			break;
 			case SDLK_f:
-				up = true;
 				type = 0;
 			break;
 			case SDLK_g:
-				up = true;
 				type = 1;
 			break;
 			case SDLK_p:
-				up = true;
 				type = 2;
+			break;
+			case SDLK_s:
+				up = true;
+				single = true;
+				//get next frame
+			break;
+			case SDLK_a:
+				up = !up;
+				single = false;
+				//toggle animation
+			break;
+			case SDLK_q:
+				quit = true;
 			break;
 			default:
 			break;
@@ -159,7 +170,7 @@ int main(int argc, char** argv){
 		SDL_UpdateTexture(imageTexture, NULL, image->returnData(), 3*image->returnWidth());
 		renderTexture(imageTexture, rendererImage, 0, 0);
 		SDL_RenderPresent(rendererImage);
-		up = false;
+		if(single) up = false;
 	}
 
     //Display the frame rate to stdout, as well as current gamma value
