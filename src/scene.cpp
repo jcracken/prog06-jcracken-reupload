@@ -72,7 +72,6 @@ void scene::acquireData(std::string name) {
 	char type = '\0'; //type of data being read
 
 	light lTemp = light(); //used for parsing
-	obj oTemp = obj();
 
 	float temp[3]; //used for parsing
 	int line = 0; //used for parsing
@@ -135,6 +134,7 @@ void scene::acquireData(std::string name) {
 					if (!follow) { //read in object data
 						line = 1;
 						iss >> objName;
+						obj oTemp = obj();
 						oTemp.readData(objName);
 						oTemp.storeData();
 						objects.push_back(oTemp);
@@ -311,10 +311,10 @@ void scene::draw() {
 		for (unsigned int j = 0; j < t.size(); j++) {
 			boundYmax = ceil(t.at(j).boundYMax()); //find bounding values
 			boundYmin = floor(t.at(j).boundYMin());
-			for (unsigned int m = boundYmin; m < boundYmax; m++) {
+			for (unsigned int m = boundYmin; m <= boundYmax; m++) {
 				boundXmax = ceil(t.at(j).boundXMax()); //ditto
 				boundXmin = floor(t.at(j).boundXMin());
-				for (unsigned int n = boundXmin; n < boundXmax; n++) {
+				for (unsigned int n = boundXmin; n <= boundXmax; n++) {
 					if (m < height && n < width) { //to make sure we're not trying to draw outside of the box
 						if (t.at(j).intersect(pixelLoc[m][n], &zTemp, &w0, &w1, &w2)) {
 							if (zTemp > z[m][n]) { //if z is closer

@@ -52,7 +52,7 @@ int main(int argc, char** argv){
 
 	//populate ppm
 	if(argc < 3){
-		std::cout << "usage: prog05 input output" << std::endl;
+		std::cout << "usage: prog06 input output" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
@@ -70,70 +70,70 @@ int main(int argc, char** argv){
 		return 1;
 	}
 
-  //create window for the image, then check to make sure it loaded properly
-  SDL_Window *windowImage = SDL_CreateWindow("Loaded Image", 100, 100, image->returnWidth(), image->returnHeight(), SDL_WINDOW_SHOWN);
-  if (windowImage == NULL){
-	  logSDLError(std::cout, "CreateWindowImage");
-	  SDL_Quit();
-	  return 1;
-  }
+	//create window for the image, then check to make sure it loaded properly
+	SDL_Window *windowImage = SDL_CreateWindow("Loaded Image", 100, 100, image->returnWidth(), image->returnHeight(), SDL_WINDOW_SHOWN);
+	if (windowImage == NULL){
+		logSDLError(std::cout, "CreateWindowImage");
+		SDL_Quit();
+		return 1;
+	}
 
-  //ditto, but renderer instead of window
-  SDL_Renderer *rendererImage = SDL_CreateRenderer(windowImage, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-  if (rendererImage == NULL){
- 	 logSDLError(std::cout, "CreateRendererImage");
- 	 SDL_DestroyWindow(windowImage);
- 	 SDL_Quit();
- 	 return 1;
-  }
+	//ditto, but renderer instead of window
+	SDL_Renderer *rendererImage = SDL_CreateRenderer(windowImage, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+	if (rendererImage == NULL){
+ 		logSDLError(std::cout, "CreateRendererImage");
+ 		SDL_DestroyWindow(windowImage);
+ 		SDL_Quit();
+ 		return 1;
+	}
 
-  //The texture we'll be using
-  SDL_Texture *imageTexture;
+	//The texture we'll be using
+	SDL_Texture *imageTexture;
 
-  //Initialize the texture.  SDL_PIXELFORMAT_RGB24 specifies 3 bytes per
-  //pixel, one per color channel
-  imageTexture = SDL_CreateTexture(rendererImage,SDL_PIXELFORMAT_RGB24,SDL_TEXTUREACCESS_STATIC,image->returnWidth(),image->returnHeight());
+	//Initialize the texture.  SDL_PIXELFORMAT_RGB24 specifies 3 bytes per
+	//pixel, one per color channel
+	imageTexture = SDL_CreateTexture(rendererImage,SDL_PIXELFORMAT_RGB24,SDL_TEXTUREACCESS_STATIC,image->returnWidth(),image->returnHeight());
 
-  //Copy the raw data array into the texture.
-  SDL_UpdateTexture(imageTexture, NULL, image->returnData(), 3*image->returnWidth());
-  if (imageTexture == NULL){
-    logSDLError(std::cout, "CreateImageTextureFromSurface");
-  }
+	//Copy the raw data array into the texture.
+	SDL_UpdateTexture(imageTexture, NULL, image->returnData(), 3*image->returnWidth());
+	if (imageTexture == NULL){
+	logSDLError(std::cout, "CreateImageTextureFromSurface");
+	}
 
-  //Make sure it loaded ok
-  if (imageTexture == NULL){
-    SDL_DestroyTexture(imageTexture);
-    SDL_DestroyRenderer(rendererImage);
-    SDL_DestroyWindow(windowImage);
-    SDL_Quit();
-    return 1;
-  }
-  //render loaded texture here
+	//Make sure it loaded ok
+	if (imageTexture == NULL){
+	SDL_DestroyTexture(imageTexture);
+	SDL_DestroyRenderer(rendererImage);
+	SDL_DestroyWindow(windowImage);
+	SDL_Quit();
+	return 1;
+	}
+	//render loaded texture here
 	renderTexture(imageTexture, rendererImage, 0, 0);
 
 	//Update the screen
 	SDL_RenderPresent(rendererImage);
 
-    //Variables used in the rendering loop
-    SDL_Event event;
+	//Variables used in the rendering loop
+	SDL_Event event;
 	bool quit = false;
 
 	while (!quit){
-    //Grab the time for frame rate computation
-    const Uint64 start = SDL_GetPerformanceCounter();
+	//Grab the time for frame rate computation
+	const Uint64 start = SDL_GetPerformanceCounter();
 
-    //Clear the screen
+	//Clear the screen
 	SDL_RenderClear(rendererImage);
 
 		//Event Polling
-    //This while loop responds to mouse and keyboard commands.
-    while (SDL_PollEvent(&event)){
+	//This while loop responds to mouse and keyboard commands.
+	while (SDL_PollEvent(&event)){
 			if (event.type == SDL_QUIT){
 				quit = true;
 			}
-      //Use number input to select which clip should be drawn
-      if (event.type == SDL_KEYDOWN){
-        switch (event.key.keysym.sym){
+		//Use number input to select which clip should be drawn
+		if (event.type == SDL_KEYDOWN){
+		switch (event.key.keysym.sym){
 			case SDLK_ESCAPE: //if escape, quit
 				quit = true;
 			break;
@@ -159,11 +159,14 @@ int main(int argc, char** argv){
 			case SDLK_q:
 				quit = true;
 			break;
+			case SDLK_w:
+				image->writeData(argv[2]);
+			break;
 			default:
 			break;
-        }
-      }
-    }
+		}
+		}
+	}
 
 	if(up){ //if the image was updated
 		image->setData(sc->returnData(type), sc->returnHeight(), 3 * sc->returnWidth());
@@ -173,28 +176,25 @@ int main(int argc, char** argv){
 		if(single) up = false;
 	}
 
-    //Display the frame rate to stdout, as well as current gamma value
-    const Uint64 end = SDL_GetPerformanceCounter();
-    const static Uint64 freq = SDL_GetPerformanceFrequency();
-    const double seconds = ( end - start ) / static_cast< double >( freq );
+	//Display the frame rate to stdout, as well as current gamma value
+	const Uint64 end = SDL_GetPerformanceCounter();
+	const static Uint64 freq = SDL_GetPerformanceFrequency();
+	const double seconds = ( end - start ) / static_cast< double >( freq );
 
-    //You may want to comment this line out for debugging purposes
-    std::cout << "Frame time: " << seconds * 1000.0 << "ms" << std::endl;
-  }
+	//You may want to comment this line out for debugging purposes
+	std::cout << "Frame time: " << seconds * 1000.0 << "ms" << std::endl;
+	}
 
-    //After the loop finishes (when the window is closed, or escape is
-    //pressed, clean up the data that we allocated.
+	//After the loop finishes (when the window is closed, or escape is
+	//pressed, clean up the data that we allocated.
 	SDL_DestroyTexture(imageTexture);
 	SDL_DestroyRenderer(rendererImage);
 	SDL_DestroyWindow(windowImage);
 	SDL_Quit();
 
-    //write data to a SDR ppm
-	image->writeData(argv[2]);
-
 	//clear memory
 	delete image;
 	delete sc;
 
-  return 0;
+	return 0;
 }
