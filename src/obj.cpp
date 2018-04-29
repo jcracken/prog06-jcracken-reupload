@@ -385,3 +385,7 @@ std::vector<triangle> obj::getTriangles() {
 vect4 obj::getPointNorm(int loc) {
 	return pointNorms.at(loc);
 }
+
+std::vector<std::vector<int>>* obj::getPointConns() {
+	return &this->pointConns;
+}

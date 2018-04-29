@@ -381,6 +381,46 @@ void scene::draw() {
 	this->phong(); //calculate phong values
 }
 
+void scene::phys() {
+	std::vector<vect>* p;
+	std::vector<std::vector<int>>* conns;
+	float grav = 9.8 * this->mass;
+	float temp[3] = { 0, grav, 0 };
+	for (int i = 0; i < objects.size(); i++) {
+		p = objects.at(i).getPoints();
+		conns = objects.at(i).getPointConns();
+		forces.push_back(std::vector<vect>());
+		for (int j = 0; j < p->size(); j++) {
+			for (int k = 0; k < conns->at(j).size(); k++) {
+				temp[0] = temp[0] + 0;
+				temp[1] = temp[1] + 0;
+				temp[2] = temp[2] + 0;
+			}
+			forces.at(i).at(j) = vect(temp[0], temp[1], temp[2]);
+			temp[0] = 0;
+			temp[1] = grav;
+			temp[2] = 0;
+		}
+	}
+}
+
+void scene::upLocs() {
+	std::vector<vect>* p;
+	float vel[3] = { 0 };
+	float *temp, *temp1;
+	for (int i = 0; i < objects.size(); i++) {
+		p = objects.at(i).getPoints();
+		for (int j = 0; j < p->size(); j++) {
+			temp = forces.at(i).at(j).getArr();
+			temp1 = p->at(j).getArr();
+			vel[0] = (temp[0] / this->mass) * this->timeStep;
+			vel[1] = (temp[1] / this->mass) * this->timeStep;
+			vel[2] = (temp[2] / this->mass) * this->timeStep;
+			p->at(j) = vect(temp1[0] + (vel[0] * this->timeStep), temp1[1] + (vel[1] * this->timeStep), temp1[2] + (vel[2] * this->timeStep));
+		}
+	}
+}
+
 vect scene::shading(vect n, vect v, vect ambient, vect diffuse, vect specular, float phong) { //blinn-phong calculation
 	float light[3] = { (float)ambient.getArr()[0] * 0.5f, (float)ambient.getArr()[1] * 0.5f, (float)ambient.getArr()[2] * 0.5f };
 	for (unsigned int i = 0; i < lights.size(); i++) {

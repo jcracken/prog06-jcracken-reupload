@@ -57,6 +57,7 @@ class scene { //main class, used to render everything
 	std::vector<std::vector<color>> fColor;
 	std::vector<std::vector<color>> pColor;
 	std::vector<std::vector<vect>> pNorms;
+	std::vector<std::vector<vect>> forces;
 	vect shading(vect n, vect v, vect ambient, vect diffuse, vect specular, float phong);
 	void genPixelData(float imageHeight, float imageWidth);
 	void gourand();
@@ -75,5 +76,7 @@ class scene { //main class, used to render everything
     void acquireData(std::string name);
 	void setup(); //creates transformation matrix and all other initial data, including the fragments
 	void draw(); //rasterizes the fragments
+	void phys(); //calculate physics forces
+	void upLocs(); //update the locations
 };
 #endif

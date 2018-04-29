@@ -45,5 +45,6 @@ public:
 	std::vector<vect>* getPoints();
 	std::vector<triangle> getTriangles();
 	vect4 getPointNorm(int loc);
+	std::vector<std::vector<int>>* getPointConns();
 };
 #endif

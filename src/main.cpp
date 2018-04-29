@@ -169,6 +169,8 @@ int main(int argc, char** argv){
 	}
 
 	if(up){ //if the image was updated
+		sc->phys();
+		sc->upLocs();
 		image->setData(sc->returnData(type), sc->returnHeight(), 3 * sc->returnWidth());
 		SDL_UpdateTexture(imageTexture, NULL, image->returnData(), 3*image->returnWidth());
 		renderTexture(imageTexture, rendererImage, 0, 0);
