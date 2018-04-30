@@ -386,15 +386,18 @@ void scene::phys() {
 	std::vector<std::vector<int>>* conns;
 	float grav = 9.8 * this->mass;
 	float temp[3] = { 0, grav, 0 };
+	float* temp1, *temp2;
 	for (int i = 0; i < objects.size(); i++) {
 		p = objects.at(i).getPoints();
 		conns = objects.at(i).getPointConns();
 		forces.push_back(std::vector<vect>());
 		for (int j = 0; j < p->size(); j++) {
+			temp1 = p->at(j).getArr();
 			for (int k = 0; k < conns->at(j).size(); k++) {
-				temp[0] = temp[0] + 0;
-				temp[1] = temp[1] + 0;
-				temp[2] = temp[2] + 0;
+				temp2 = p->at(conns->at(j).at(k)).getArr();
+				temp[0] = temp[0] + this->springConst * (powf(powf(temp2[0], 2.0) - powf(temp1[0], 2.0), 0.5) - temp2[0] - temp1[0]) * (temp2[0] - temp1[0]) / (powf(powf(temp2[0], 2.0) - powf(temp1[0], 2.0), 0.5));
+				temp[1] = temp[1] + this->springConst * (powf(powf(temp2[1], 2.0) - powf(temp1[1], 2.0), 0.5) - temp2[1] - temp1[1]) * (temp2[1] - temp1[1]) / (powf(powf(temp2[1], 2.0) - powf(temp1[1], 2.0), 0.5));
+				temp[2] = temp[2] + this->springConst * (powf(powf(temp2[2], 2.0) - powf(temp1[2], 2.0), 0.5) - temp2[2] - temp1[2]) * (temp2[2] - temp1[2]) / (powf(powf(temp2[2], 2.0) - powf(temp1[2], 2.0), 0.5));
 			}
 			forces.at(i).at(j) = vect(temp[0], temp[1], temp[2]);
 			temp[0] = 0;
@@ -406,6 +409,7 @@ void scene::phys() {
 
 void scene::upLocs() {
 	std::vector<vect>* p;
+	bool constraint = false;
 	float vel[3] = { 0 };
 	float *temp, *temp1;
 	for (int i = 0; i < objects.size(); i++) {
@@ -413,10 +417,14 @@ void scene::upLocs() {
 		for (int j = 0; j < p->size(); j++) {
 			temp = forces.at(i).at(j).getArr();
 			temp1 = p->at(j).getArr();
-			vel[0] = (temp[0] / this->mass) * this->timeStep;
-			vel[1] = (temp[1] / this->mass) * this->timeStep;
-			vel[2] = (temp[2] / this->mass) * this->timeStep;
-			p->at(j) = vect(temp1[0] + (vel[0] * this->timeStep), temp1[1] + (vel[1] * this->timeStep), temp1[2] + (vel[2] * this->timeStep));
+			vel[0] = (temp[0] / this->mass) * this->timeStep * 0.99; //.99 for air friction
+			vel[1] = (temp[1] / this->mass) * this->timeStep * 0.99;
+			vel[2] = (temp[2] / this->mass) * this->timeStep * 0.99;
+			for (int k = 0; k < this->constraints.size(); k++) {
+				if (this->constraints.at(k) == j) constraint = true;
+			}
+			if(!constraint) p->at(j) = vect(temp1[0] + (vel[0] * this->timeStep), temp1[1] + (vel[1] * this->timeStep), temp1[2] + (vel[2] * this->timeStep));
+			else constraint = false;
 		}
 	}
 }
