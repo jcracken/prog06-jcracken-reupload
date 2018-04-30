@@ -17,7 +17,7 @@
 /// \param os The output stream to write the message to
 /// \param msg The error message to write, SDL_GetError() appended to it
 ///
-void logSDLError(std::ostream &os, const std::string &msg){
+void logSDLError(std::ostream &os, const std::string &msg) {
 	os << msg << " error: " << SDL_GetError() << std::endl;
 }
 
@@ -30,7 +30,7 @@ void logSDLError(std::ostream &os, const std::string &msg){
 /// \param x The x coordinate to draw to
 /// \param y The y coordinate to draw to
 ///
-void renderTexture(SDL_Texture *tex, SDL_Renderer *ren, int x, int y){
+void renderTexture(SDL_Texture *tex, SDL_Renderer *ren, int x, int y) {
 	//Setup the destination rectangle to be at the position we want
 	SDL_Rect dst;
 	dst.x = x;
@@ -41,7 +41,7 @@ void renderTexture(SDL_Texture *tex, SDL_Renderer *ren, int x, int y){
 	SDL_RenderCopy(ren, tex, NULL, &dst);
 }
 
-int main(int argc, char** argv){
+int main(int argc, char** argv) {
 
 	//create vars for main
 	ppm* image = new ppm();
@@ -51,7 +51,7 @@ int main(int argc, char** argv){
 	int type = 0; //type of shading
 
 	//populate ppm
-	if(argc < 3){
+	if(argc < 3) {
 		std::cout << "usage: prog06 input output" << std::endl;
 		exit(EXIT_FAILURE);
 	}
@@ -65,14 +65,14 @@ int main(int argc, char** argv){
 	image->setWidth(sc->returnWidth());
 
 	//Start up SDL and make sure it went ok
-	if (SDL_Init(SDL_INIT_VIDEO) != 0){
+	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
 		logSDLError(std::cout, "SDL_Init");
 		return 1;
 	}
 
 	//create window for the image, then check to make sure it loaded properly
 	SDL_Window *windowImage = SDL_CreateWindow("Loaded Image", 100, 100, image->returnWidth(), image->returnHeight(), SDL_WINDOW_SHOWN);
-	if (windowImage == NULL){
+	if (windowImage == NULL) {
 		logSDLError(std::cout, "CreateWindowImage");
 		SDL_Quit();
 		return 1;
@@ -80,7 +80,7 @@ int main(int argc, char** argv){
 
 	//ditto, but renderer instead of window
 	SDL_Renderer *rendererImage = SDL_CreateRenderer(windowImage, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-	if (rendererImage == NULL){
+	if (rendererImage == NULL) {
  		logSDLError(std::cout, "CreateRendererImage");
  		SDL_DestroyWindow(windowImage);
  		SDL_Quit();
@@ -96,17 +96,17 @@ int main(int argc, char** argv){
 
 	//Copy the raw data array into the texture.
 	SDL_UpdateTexture(imageTexture, NULL, image->returnData(), 3*image->returnWidth());
-	if (imageTexture == NULL){
-	logSDLError(std::cout, "CreateImageTextureFromSurface");
+	if (imageTexture == NULL) {
+		logSDLError(std::cout, "CreateImageTextureFromSurface");
 	}
 
 	//Make sure it loaded ok
-	if (imageTexture == NULL){
-	SDL_DestroyTexture(imageTexture);
-	SDL_DestroyRenderer(rendererImage);
-	SDL_DestroyWindow(windowImage);
-	SDL_Quit();
-	return 1;
+	if (imageTexture == NULL) {
+		SDL_DestroyTexture(imageTexture);
+		SDL_DestroyRenderer(rendererImage);
+		SDL_DestroyWindow(windowImage);
+		SDL_Quit();
+		return 1;
 	}
 	//render loaded texture here
 	renderTexture(imageTexture, rendererImage, 0, 0);
@@ -118,73 +118,72 @@ int main(int argc, char** argv){
 	SDL_Event event;
 	bool quit = false;
 
-	while (!quit){
-	//Grab the time for frame rate computation
-	const Uint64 start = SDL_GetPerformanceCounter();
+	while (!quit) {
+		//Grab the time for frame rate computation
+		const Uint64 start = SDL_GetPerformanceCounter();
 
-	//Clear the screen
-	SDL_RenderClear(rendererImage);
+		//Clear the screen
+		SDL_RenderClear(rendererImage);
 
-		//Event Polling
-	//This while loop responds to mouse and keyboard commands.
-	while (SDL_PollEvent(&event)){
-			if (event.type == SDL_QUIT){
+			//Event Polling
+		//This while loop responds to mouse and keyboard commands.
+		while (SDL_PollEvent(&event)) {
+			if (event.type == SDL_QUIT) {
 				quit = true;
 			}
-		//Use number input to select which clip should be drawn
-		if (event.type == SDL_KEYDOWN){
-		switch (event.key.keysym.sym){
-			case SDLK_ESCAPE: //if escape, quit
-				quit = true;
-			break;
-			case SDLK_f:
-				type = 0;
-			break;
-			case SDLK_g:
-				type = 1;
-			break;
-			case SDLK_p:
-				type = 2;
-			break;
-			case SDLK_s:
-				up = true;
-				single = true;
-				//get next frame
-			break;
-			case SDLK_a:
-				up = !up;
-				single = false;
-				//toggle animation
-			break;
-			case SDLK_q:
-				quit = true;
-			break;
-			case SDLK_w:
-				image->writeData(argv[2]);
-			break;
-			default:
-			break;
+			//Use number input to select which clip should be drawn
+			if (event.type == SDL_KEYDOWN) {
+				switch (event.key.keysym.sym) {
+					case SDLK_ESCAPE: //if escape, quit
+						quit = true;
+					break;
+					case SDLK_f:
+						type = 0;
+					break;
+					case SDLK_g:
+						type = 1;
+					break;
+					case SDLK_p:
+						type = 2;
+					break;
+					case SDLK_s:
+						up = true;
+						single = true;
+						//get next frame
+					break;
+					case SDLK_a:
+						up = !up;
+						single = false;
+						//toggle animation
+					break;
+					case SDLK_q:
+						quit = true;
+					break;
+					case SDLK_w:
+						image->writeData(argv[2]);
+					break;
+					default:
+					break;
+				}
+			}
 		}
+		if(up) { //if the image was updated
+			sc->phys();
+			sc->upLocs();
+			image->setData(sc->returnData(type), sc->returnHeight(), 3 * sc->returnWidth());
+			SDL_UpdateTexture(imageTexture, NULL, image->returnData(), 3*image->returnWidth());
+			renderTexture(imageTexture, rendererImage, 0, 0);
+			SDL_RenderPresent(rendererImage);
+			if(single) up = false;
 		}
-	}
 
-	if(up){ //if the image was updated
-		sc->phys();
-		sc->upLocs();
-		image->setData(sc->returnData(type), sc->returnHeight(), 3 * sc->returnWidth());
-		SDL_UpdateTexture(imageTexture, NULL, image->returnData(), 3*image->returnWidth());
-		renderTexture(imageTexture, rendererImage, 0, 0);
-		SDL_RenderPresent(rendererImage);
-		if(single) up = false;
-	}
+		//Display the frame rate to stdout, as well as current gamma value
+		const Uint64 end = SDL_GetPerformanceCounter();
+		const static Uint64 freq = SDL_GetPerformanceFrequency();
+		const double seconds = ( end - start ) / static_cast< double >( freq );
 
-	//Display the frame rate to stdout, as well as current gamma value
-	const Uint64 end = SDL_GetPerformanceCounter();
-	const static Uint64 freq = SDL_GetPerformanceFrequency();
-	const double seconds = ( end - start ) / static_cast< double >( freq );
-
-	//You may want to comment this line out for debugging purposes
-	std::cout << "Frame time: " << seconds * 1000.0 << "ms" << std::endl;
+		//You may want to comment this line out for debugging purposes
+		std::cout << "Frame time: " << seconds * 1000.0 << "ms" << std::endl;
 	}
 
 	//After the loop finishes (when the window is closed, or escape is

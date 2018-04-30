@@ -339,6 +339,7 @@ void obj::setPhong(float phong) {
 void obj::pointPopulate() {
 	unsigned int i, j, k = 0;
 	vect temp = vect(0, 0, 0);
+	pointNorms.clear();
 	for (i = 0; i < points.size(); i++) {
 		for (j = 0; j < triangles.size(); j++) { //for every triangle, if current point is part of triangle, find triangle norm
 			if (triangles.at(j).getPoint(0).comp(points.at(i)) || triangles.at(j).getPoint(1).comp(points.at(i)) || triangles.at(j).getPoint(2).comp(points.at(i))) {

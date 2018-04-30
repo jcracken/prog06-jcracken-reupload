@@ -399,7 +399,7 @@ void scene::phys() {
 				temp[1] = temp[1] + this->springConst * (powf(powf(temp2[1], 2.0) - powf(temp1[1], 2.0), 0.5) - temp2[1] - temp1[1]) * (temp2[1] - temp1[1]) / (powf(powf(temp2[1], 2.0) - powf(temp1[1], 2.0), 0.5));
 				temp[2] = temp[2] + this->springConst * (powf(powf(temp2[2], 2.0) - powf(temp1[2], 2.0), 0.5) - temp2[2] - temp1[2]) * (temp2[2] - temp1[2]) / (powf(powf(temp2[2], 2.0) - powf(temp1[2], 2.0), 0.5));
 			}
-			forces.at(i).at(j) = vect(temp[0], temp[1], temp[2]);
+			forces.at(i).push_back(vect(temp[0], temp[1], temp[2]));
 			temp[0] = 0;
 			temp[1] = grav;
 			temp[2] = 0;
