@@ -4,36 +4,41 @@ scene::scene(){ //constructor
   this->width = 0;
   this->height = 0;
   this->angle = 0.0;
+  this->retData = NULL;
 }
 
 float** scene::returnData(int type){ //converts data stored locally into a 2D float array and returns it
 	int i, j;
-  float** returnData;
-  returnData = new float*[this->height];
-  for (i = 0; i < height; i++)
-    returnData[i] = new float[3 * this->width];
-  float* temp;
-  for(i = 0; i < this->height; i++){
-    for(j = 0; j < this->width; j++){
-		if (type == 0) { //flat
-			temp = (this->data[this->height - i - 1][j]).getArr();
-			returnData[i][3 * j] = temp[0];
-			returnData[i][3 * j + 1] = temp[1];
-			returnData[i][3 * j + 2] = temp[2];
-		} else if (type == 1) { //gourand
-			temp = (this->gData[this->height - i - 1][j]).getArr();
-			returnData[i][3 * j] = temp[0];
-			returnData[i][3 * j + 1] = temp[1];
-			returnData[i][3 * j + 2] = temp[2];
-		} else { //phong
-			temp = (this->pColor[this->height - i - 1][j]).getColor().getArr();
-			returnData[i][3 * j] = temp[0];
-			returnData[i][3 * j + 1] = temp[1];
-			returnData[i][3 * j + 2] = temp[2];
+	if (retData != NULL) {
+		for (i = 0; i < height; i++) {
+			delete retData[i];
 		}
-    }
-  }
-  return returnData;
+	}
+	retData = new float*[this->height];
+	for (i = 0; i < height; i++)
+		retData[i] = new float[3 * this->width];
+	float* temp;
+	for(i = 0; i < this->height; i++){
+		for(j = 0; j < this->width; j++){
+			if (type == 0) { //flat
+				temp = (this->data[this->height - i - 1][j]).getArr();
+				retData[i][3 * j] = temp[0];
+				retData[i][3 * j + 1] = temp[1];
+				retData[i][3 * j + 2] = temp[2];
+			} else if (type == 1) { //gourand
+				temp = (this->gData[this->height - i - 1][j]).getArr();
+				retData[i][3 * j] = temp[0];
+				retData[i][3 * j + 1] = temp[1];
+				retData[i][3 * j + 2] = temp[2];
+			} else { //phong
+				temp = (this->pColor[this->height - i - 1][j]).getColor().getArr();
+				retData[i][3 * j] = temp[0];
+				retData[i][3 * j + 1] = temp[1];
+				retData[i][3 * j + 2] = temp[2];
+			}
+		}
+	}
+  return retData;
 }
 
 int scene::returnWidth(){ //returns width
@@ -194,6 +199,7 @@ void scene::setup() {
 	vect temp;
 	matrix mTemp, mT2;
 	unsigned int i;
+	float* temp1, *temp2;
 
 	for (i = 0; i < (unsigned)3; i++) { //create w vector
 		w[i] = (this->eye.getArr()[i] - this->lookat.getArr()[i]) / sqrt(powf(this->eye.getArr()[0] - this->lookat.getArr()[0], 2.0) + powf(this->eye.getArr()[1] - this->lookat.getArr()[1], 2.0) + powf(this->eye.getArr()[2] - this->lookat.getArr()[2], 2));
@@ -284,12 +290,22 @@ void scene::setup() {
 	
 	for (i = 0; i < this->objects.size(); i++) { //transform all vertices
 		std::vector<vect>* t = this->objects.at(i).getPoints();
+		std::vector<std::vector<int>>* conns = objects.at(i).getPointConns();
 		for (unsigned int j = 0; j < t->size(); j++) {
 			vect4 t1 = vect4(t->at(j), 1.0);
 			M.mult(&t1, &mTemp);
 			t->at(j) = vect(mTemp.getVal(0, 0) / mTemp.getVal(3, 0), mTemp.getVal(1, 0) / mTemp.getVal(3, 0), mTemp.getVal(2, 0) / mTemp.getVal(3, 0));
 		}
 		objects.at(i).storeData();
+		this->dist.push_back(std::vector<std::vector<float>>());
+		for (int j = 0; j < t->size(); j++) {
+			temp1 = t->at(j).getArr();
+			this->dist.at(i).push_back(std::vector<float>());
+			for (int k = 0; k < conns->at(j).size(); k++) {
+				temp2 = t->at(conns->at(j).at(k)).getArr();
+				this->dist.at(i).at(j).push_back(sqrt(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0)));
+			}
+		}
 	}
 }
 
@@ -384,9 +400,10 @@ void scene::draw() {
 void scene::phys() {
 	std::vector<vect>* p;
 	std::vector<std::vector<int>>* conns;
-	float grav = 9.8 * this->mass;
+	float grav = -9.8 * this->mass;
 	float temp[3] = { 0, grav, 0 };
 	float* temp1, *temp2;
+	this->forces.clear();
 	for (int i = 0; i < objects.size(); i++) {
 		p = objects.at(i).getPoints();
 		conns = objects.at(i).getPointConns();
@@ -395,9 +412,9 @@ void scene::phys() {
 			temp1 = p->at(j).getArr();
 			for (int k = 0; k < conns->at(j).size(); k++) {
 				temp2 = p->at(conns->at(j).at(k)).getArr();
-				temp[0] = temp[0] + this->springConst * (powf(powf(temp2[0], 2.0) - powf(temp1[0], 2.0), 0.5) - temp2[0] - temp1[0]) * (temp2[0] - temp1[0]) / (powf(powf(temp2[0], 2.0) - powf(temp1[0], 2.0), 0.5));
-				temp[1] = temp[1] + this->springConst * (powf(powf(temp2[1], 2.0) - powf(temp1[1], 2.0), 0.5) - temp2[1] - temp1[1]) * (temp2[1] - temp1[1]) / (powf(powf(temp2[1], 2.0) - powf(temp1[1], 2.0), 0.5));
-				temp[2] = temp[2] + this->springConst * (powf(powf(temp2[2], 2.0) - powf(temp1[2], 2.0), 0.5) - temp2[2] - temp1[2]) * (temp2[2] - temp1[2]) / (powf(powf(temp2[2], 2.0) - powf(temp1[2], 2.0), 0.5));
+				temp[0] = temp[0] + this->springConst * (powf(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0), 0.5) - dist.at(i).at(j).at(k)) * (temp2[0] - temp1[0]) / (powf(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0), 0.5));
+				temp[1] = temp[1] + this->springConst * (powf(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0), 0.5) - dist.at(i).at(j).at(k)) * (temp2[1] - temp1[1]) / (powf(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0), 0.5));
+				temp[2] = temp[2] + this->springConst * (powf(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0), 0.5) - dist.at(i).at(j).at(k)) * (temp2[2] - temp1[2]) / (powf(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0), 0.5));
 			}
 			forces.at(i).push_back(vect(temp[0], temp[1], temp[2]));
 			temp[0] = 0;
@@ -427,6 +444,7 @@ void scene::upLocs() {
 			else constraint = false;
 		}
 	}
+	this->draw();
 }
 
 vect scene::shading(vect n, vect v, vect ambient, vect diffuse, vect specular, float phong) { //blinn-phong calculation
@@ -534,6 +552,7 @@ void scene::flat() { //calculate flat values
 void scene::phong() { //calculate phong values
 	vect ambient, diffuse, specular;
 	float phong;
+	pColor.clear();
 	for (int i = 0; i < this->height; i++) {
 		pColor.push_back(std::vector<color>());
 		for (int j = 0; j < this->width; j++) {

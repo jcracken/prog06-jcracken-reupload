@@ -49,6 +49,7 @@ int main(int argc, char** argv) {
 	bool up = false; //update image?
 	bool single = false; //update a single frame or animate
 	int type = 0; //type of shading
+	float** dat = NULL;
 
 	//populate ppm
 	if(argc < 3) {
@@ -60,7 +61,8 @@ int main(int argc, char** argv) {
 	sc->acquireData(argv[1]);
 	sc->setup();
 	sc->draw();
-	image->setData(sc->returnData(type), sc->returnHeight(), 3 * sc->returnWidth());
+	dat = sc->returnData(type);
+	image->setData(dat, sc->returnHeight(), 3 * sc->returnWidth());
 	image->setHeight(sc->returnHeight());
 	image->setWidth(sc->returnWidth());
 
@@ -170,7 +172,8 @@ int main(int argc, char** argv) {
 		if(up) { //if the image was updated
 			sc->phys();
 			sc->upLocs();
-			image->setData(sc->returnData(type), sc->returnHeight(), 3 * sc->returnWidth());
+			dat = sc->returnData(type);
+			image->setData(dat, sc->returnHeight(), 3 * sc->returnWidth());
 			SDL_UpdateTexture(imageTexture, NULL, image->returnData(), 3*image->returnWidth());
 			renderTexture(imageTexture, rendererImage, 0, 0);
 			SDL_RenderPresent(rendererImage);

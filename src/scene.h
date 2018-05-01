@@ -44,6 +44,7 @@ class scene { //main class, used to render everything
 	float mass;
 	float springConst;
 	float** z;
+	float** retData;
 	vect** data;
 	vect** gData;
 	vect** pData;
@@ -58,6 +59,7 @@ class scene { //main class, used to render everything
 	std::vector<std::vector<color>> pColor;
 	std::vector<std::vector<vect>> pNorms;
 	std::vector<std::vector<vect>> forces;
+	std::vector<std::vector<std::vector<float>>> dist;
 	vect shading(vect n, vect v, vect ambient, vect diffuse, vect specular, float phong);
 	void genPixelData(float imageHeight, float imageWidth);
 	void gourand();
