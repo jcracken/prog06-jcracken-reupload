@@ -1,3 +1,13 @@
+
+##Notes
+
+usage is ./prog06 input output
+
+It parses all inputs correctly, you can control the SDL loop with s and a, it may or may not calculate accumulated force properly (probably not), it handels vertex-based constraints properly, it computes new velocities and adjusts for drag, it updates the geometry for rasterization (whether the rasterization works properly is up in the air), and I provided a cloth simulation using a past obj file.
+
+
+##References
+
 This directory includes a simple piece of cloth as a Wavefront .obj format as well as some scene files to test the mass-spring system
 
 Models in Wavefront .obj format

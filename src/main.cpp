@@ -139,29 +139,29 @@ int main(int argc, char** argv) {
 					case SDLK_ESCAPE: //if escape, quit
 						quit = true;
 					break;
-					case SDLK_f:
+					case SDLK_f: //flat
 						type = 0;
 					break;
-					case SDLK_g:
+					case SDLK_g: //gourand
 						type = 1;
 					break;
-					case SDLK_p:
+					case SDLK_p: //phong
 						type = 2;
 					break;
-					case SDLK_s:
+					case SDLK_s: //step update
 						up = true;
 						single = true;
 						//get next frame
 					break;
-					case SDLK_a:
+					case SDLK_a: //animate
 						up = !up;
 						single = false;
 						//toggle animation
 					break;
-					case SDLK_q:
+					case SDLK_q: //quit
 						quit = true;
 					break;
-					case SDLK_w:
+					case SDLK_w: //write to ppm
 						image->writeData(argv[2]);
 					break;
 					default:
@@ -170,8 +170,8 @@ int main(int argc, char** argv) {
 			}
 		}
 		if(up) { //if the image was updated
-			sc->phys();
-			sc->upLocs();
+			sc->phys(); //update physics
+			sc->upLocs(); //update geometry
 			dat = sc->returnData(type);
 			image->setData(dat, sc->returnHeight(), 3 * sc->returnWidth());
 			SDL_UpdateTexture(imageTexture, NULL, image->returnData(), 3*image->returnWidth());

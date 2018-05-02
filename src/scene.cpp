@@ -164,20 +164,20 @@ void scene::acquireData(std::string name) {
 						}
 					}
 				break;
-				case 'h':
+				case 'h': //time step
 					iss >> timeStep;
 				break;
-				case 'm':
+				case 'm': //mass
 					iss >> mass;
 				break;
-				case 'k':
+				case 'k': //spring constant
 					iss >> springConst;
 				break;
-				case 'a':
+				case 'a': //acceleration (gravity)
 					iss >> temp[0] >> temp[1] >> temp[2];
 					accel = vect(temp[0], temp[1], temp[2]);
 				break;
-				case 'C':
+				case 'C': //constraints
 					iss >> temp[0];
 					for (int i = 0; i < temp[0]; i++) {
 						iss >> temp[1];
@@ -202,7 +202,7 @@ void scene::setup() {
 	unsigned int i;
 	float* temp1, *temp2;
 
-	this->accel.multConst(this->mass);
+	this->accel.multConst(this->mass); //adjust the acceleration into a force
 
 	for (i = 0; i < (unsigned)3; i++) { //create w vector
 		w[i] = (this->eye.getArr()[i] - this->lookat.getArr()[i]) / sqrt(powf(this->eye.getArr()[0] - this->lookat.getArr()[0], 2.0) + powf(this->eye.getArr()[1] - this->lookat.getArr()[1], 2.0) + powf(this->eye.getArr()[2] - this->lookat.getArr()[2], 2));
@@ -292,11 +292,11 @@ void scene::setup() {
 	this->gourand();
 	
 	for (i = 0; i < this->objects.size(); i++) { //transform all vertices
-		oldObj.push_back(objects.at(i));
+		oldObj.push_back(objects.at(i)); //backup original vertex coordinates for physics
 		std::vector<vect>* t = this->objects.at(i).getPoints();
 		std::vector<std::vector<int>>* conns = objects.at(i).getPointConns();
-		this->dist.push_back(std::vector<std::vector<float>>());
-		for (int j = 0; j < t->size(); j++) {
+		this->dist.push_back(std::vector<std::vector<float>>()); //for calculating distances between points
+		for (int j = 0; j < t->size(); j++) { //do this before transformation
 			temp1 = t->at(j).getArr();
 			this->dist.at(i).push_back(std::vector<float>());
 			for (int k = 0; k < conns->at(j).size(); k++) {
@@ -408,25 +408,28 @@ void scene::draw() {
 	this->phong(); //calculate phong values
 }
 
-void scene::phys() {
+void scene::phys() { //calculating physics for spring simulation
 	std::vector<vect>* p;
 	std::vector<std::vector<int>>* conns;
 	float* temp = accel.getArr();
 	float* temp1, *temp2;
 	this->forces.clear();
-	for (int i = 0; i < oldObj.size(); i++) {
+	for (int i = 0; i < oldObj.size(); i++) { //for every object
 		p = oldObj.at(i).getPoints();
 		conns = oldObj.at(i).getPointConns();
 		forces.push_back(std::vector<vect>());
-		if (!once) velocity.push_back(std::vector<vect>());
-		for (int j = 0; j < p->size(); j++) {
+		if (!once) velocity.push_back(std::vector<vect>()); //don't fill velocity 2d vector with zeroes more than once
+		for (int j = 0; j < p->size(); j++) { //for every point with original vertex locations
 			temp1 = p->at(j).getArr();
-			for (int k = 0; k < conns->at(j).size(); k++) {
+			for (int k = 0; k < conns->at(j).size(); k++) { //for every point connected to this point
 				temp2 = p->at(conns->at(j).at(k)).getArr();
+
+				//calculate spring forces. can't tell if it works properly?
 				temp[0] = temp[0] + this->springConst * (sqrt(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0)) - dist.at(i).at(j).at(k)) * (temp2[0] - temp1[0]) / (sqrt(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0)));
 				temp[1] = temp[1] + this->springConst * (sqrt(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0)) - dist.at(i).at(j).at(k)) * (temp2[1] - temp1[1]) / (sqrt(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0)));
 				temp[2] = temp[2] + this->springConst * (sqrt(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0)) - dist.at(i).at(j).at(k)) * (temp2[2] - temp1[2]) / (sqrt(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0)));
 
+				//for testing. using different values for dist
 				/*temp[0] = temp[0] + this->springConst * (sqrt(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0)) - (temp2[0] - temp1[0])) * (temp2[0] - temp1[0]) / (sqrt(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0)));
 				temp[1] = temp[1] + this->springConst * (sqrt(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0)) - (temp2[1] - temp1[1])) * (temp2[1] - temp1[1]) / (sqrt(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0)));
 				temp[2] = temp[2] + this->springConst * (sqrt(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0)) - (temp2[2] - temp1[2])) * (temp2[2] - temp1[2]) / (sqrt(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0)));*/
@@ -445,21 +448,21 @@ void scene::upLocs() {
 	float *temp, *temp1;
 	matrix mTemp;
 	once = true;
-	for (int i = 0; i < oldObj.size(); i++) {
+	for (int i = 0; i < oldObj.size(); i++) { //for every object
 		p = oldObj.at(i).getPoints();
-		for (int j = 0; j < p->size(); j++) {
+		for (int j = 0; j < p->size(); j++) { //for every point
 			temp = forces.at(i).at(j).getArr();
 			temp1 = p->at(j).getArr();
-			vel = velocity.at(i).at(j).getArr();
+			vel = velocity.at(i).at(j).getArr(); //get the current velocity, calculate the next velocity
 			vel[0] = vel[0] + (temp[0] / this->mass) * this->timeStep * 0.99; //.99 for air friction
 			vel[1] = vel[1] + (temp[1] / this->mass) * this->timeStep * 0.99;
 			vel[2] = vel[2] + (temp[2] / this->mass) * this->timeStep * 0.99;
-			for (int k = 0; k < this->constraints.size(); k++) {
+			for (int k = 0; k < this->constraints.size(); k++) { //if it's one of the constraints, don't update pos
 				if (this->constraints.at(k) == j) constraint = true;
 			}
 			if(!constraint) p->at(j) = vect(temp1[0] + (vel[0] * this->timeStep), temp1[1] + (vel[1] * this->timeStep), temp1[2] + (vel[2] * this->timeStep));
 			else constraint = false;
-			velocity.at(i).at(j) = vect(vel[0], vel[1], vel[2]);
+			velocity.at(i).at(j) = vect(vel[0], vel[1], vel[2]); //update velocity with new values
 		}
 	}
 	for (int i = 0; i < this->oldObj.size(); i++) { //transform all vertices
@@ -473,7 +476,7 @@ void scene::upLocs() {
 		}
 		objects.at(i).storeData();
 	}
-	this->draw();
+	this->draw(); //update the screen
 }
 
 vect scene::shading(vect n, vect v, vect ambient, vect diffuse, vect specular, float phong) { //blinn-phong calculation
