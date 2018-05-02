@@ -468,7 +468,6 @@ void scene::upLocs() {
 	for (int i = 0; i < this->oldObj.size(); i++) { //transform all vertices
 		std::vector<vect>* t = this->oldObj.at(i).getPoints();
 		std::vector<vect>* q = this->objects.at(i).getPoints();
-		std::vector<std::vector<int>>* conns = oldObj.at(i).getPointConns();
 		for (unsigned int j = 0; j < t->size(); j++) {
 			vect4 t1 = vect4(t->at(j), 1.0);
 			M.mult(&t1, &mTemp);
