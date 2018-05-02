@@ -5,6 +5,7 @@ scene::scene(){ //constructor
   this->height = 0;
   this->angle = 0.0;
   this->retData = NULL;
+  once = false;
 }
 
 float** scene::returnData(int type){ //converts data stored locally into a 2D float array and returns it
@@ -201,6 +202,8 @@ void scene::setup() {
 	unsigned int i;
 	float* temp1, *temp2;
 
+	this->accel.multConst(this->mass);
+
 	for (i = 0; i < (unsigned)3; i++) { //create w vector
 		w[i] = (this->eye.getArr()[i] - this->lookat.getArr()[i]) / sqrt(powf(this->eye.getArr()[0] - this->lookat.getArr()[0], 2.0) + powf(this->eye.getArr()[1] - this->lookat.getArr()[1], 2.0) + powf(this->eye.getArr()[2] - this->lookat.getArr()[2], 2));
 	}
@@ -289,6 +292,7 @@ void scene::setup() {
 	this->gourand();
 	
 	for (i = 0; i < this->objects.size(); i++) { //transform all vertices
+		oldObj.push_back(objects.at(i));
 		std::vector<vect>* t = this->objects.at(i).getPoints();
 		std::vector<std::vector<int>>* conns = objects.at(i).getPointConns();
 		for (unsigned int j = 0; j < t->size(); j++) {
@@ -321,6 +325,13 @@ void scene::draw() {
 	bool pA = false;
 	bool pB = false;
 	bool pC = false;
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+			data[i][j] = vect(0, 0, 0);
+			gData[i][j] = vect(0, 0, 0);
+			pData[i][j] = vect(0, 0, 0);
+		}
+	}
 	for (unsigned int i = 0; i < this->objects.size(); i++) {
 		t = this->objects.at(i).getTriangles(); //we copy these over for each object because this shaves off minutes of copying over the entire object to cache over and over
 		p = this->objects.at(i).getPoints();
@@ -400,14 +411,14 @@ void scene::draw() {
 void scene::phys() {
 	std::vector<vect>* p;
 	std::vector<std::vector<int>>* conns;
-	float grav = -9.8 * this->mass;
-	float temp[3] = { 0, grav, 0 };
+	float* temp = accel.getArr();
 	float* temp1, *temp2;
 	this->forces.clear();
-	for (int i = 0; i < objects.size(); i++) {
-		p = objects.at(i).getPoints();
-		conns = objects.at(i).getPointConns();
+	for (int i = 0; i < oldObj.size(); i++) {
+		p = oldObj.at(i).getPoints();
+		conns = oldObj.at(i).getPointConns();
 		forces.push_back(std::vector<vect>());
+		if (!once) velocity.push_back(std::vector<vect>());
 		for (int j = 0; j < p->size(); j++) {
 			temp1 = p->at(j).getArr();
 			for (int k = 0; k < conns->at(j).size(); k++) {
@@ -417,9 +428,8 @@ void scene::phys() {
 				temp[2] = temp[2] + this->springConst * (powf(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0), 0.5) - dist.at(i).at(j).at(k)) * (temp2[2] - temp1[2]) / (powf(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0), 0.5));
 			}
 			forces.at(i).push_back(vect(temp[0], temp[1], temp[2]));
-			temp[0] = 0;
-			temp[1] = grav;
-			temp[2] = 0;
+			temp = accel.getArr();
+			if (!once) velocity.at(i).push_back(vect(0, 0, 0));
 		}
 	}
 }
@@ -427,22 +437,36 @@ void scene::phys() {
 void scene::upLocs() {
 	std::vector<vect>* p;
 	bool constraint = false;
-	float vel[3] = { 0 };
+	float* vel;
 	float *temp, *temp1;
-	for (int i = 0; i < objects.size(); i++) {
-		p = objects.at(i).getPoints();
+	matrix mTemp;
+	for (int i = 0; i < oldObj.size(); i++) {
+		p = oldObj.at(i).getPoints();
 		for (int j = 0; j < p->size(); j++) {
 			temp = forces.at(i).at(j).getArr();
 			temp1 = p->at(j).getArr();
-			vel[0] = (temp[0] / this->mass) * this->timeStep * 0.99; //.99 for air friction
-			vel[1] = (temp[1] / this->mass) * this->timeStep * 0.99;
-			vel[2] = (temp[2] / this->mass) * this->timeStep * 0.99;
+			vel = velocity.at(i).at(j).getArr();
+			vel[0] = vel[0] + (temp[0] / this->mass) * this->timeStep * 0.99; //.99 for air friction
+			vel[1] = vel[1] + (temp[1] / this->mass) * this->timeStep * 0.99;
+			vel[2] = vel[2] + (temp[2] / this->mass) * this->timeStep * 0.99;
 			for (int k = 0; k < this->constraints.size(); k++) {
 				if (this->constraints.at(k) == j) constraint = true;
 			}
 			if(!constraint) p->at(j) = vect(temp1[0] + (vel[0] * this->timeStep), temp1[1] + (vel[1] * this->timeStep), temp1[2] + (vel[2] * this->timeStep));
 			else constraint = false;
+			velocity.at(i).at(j) = vect(vel[0], vel[1], vel[2]);
 		}
+	}
+	for (int i = 0; i < this->oldObj.size(); i++) { //transform all vertices
+		std::vector<vect>* t = this->oldObj.at(i).getPoints();
+		std::vector<vect>* q = this->objects.at(i).getPoints();
+		std::vector<std::vector<int>>* conns = oldObj.at(i).getPointConns();
+		for (unsigned int j = 0; j < t->size(); j++) {
+			vect4 t1 = vect4(t->at(j), 1.0);
+			M.mult(&t1, &mTemp);
+			q->at(j) = vect(mTemp.getVal(0, 0) / mTemp.getVal(3, 0), mTemp.getVal(1, 0) / mTemp.getVal(3, 0), mTemp.getVal(2, 0) / mTemp.getVal(3, 0));
+		}
+		objects.at(i).storeData();
 	}
 	this->draw();
 }
@@ -460,9 +484,9 @@ vect scene::shading(vect n, vect v, vect ambient, vect diffuse, vect specular, f
 		v.normalize();
 		vect h = half(t, l);
 		h.normalize();
-		light[0] = light[0] + diffuse.getArr()[0] * lights.at(i).getCol().getColor().getArr()[0] * std::max(0.0f, n.dotProduct(&l)) + specular.getArr()[0] * lights.at(i).getCol().getColor().getArr()[0] * std::powf(std::max(0.0f, n.dotProduct(&h)), phong);
-		light[1] = light[1] + diffuse.getArr()[1] * lights.at(i).getCol().getColor().getArr()[1] * std::max(0.0f, n.dotProduct(&l)) + specular.getArr()[1] * lights.at(i).getCol().getColor().getArr()[0] * std::powf(std::max(0.0f, n.dotProduct(&h)), phong);
-		light[2] = light[2] + diffuse.getArr()[2] * lights.at(i).getCol().getColor().getArr()[2] * std::max(0.0f, n.dotProduct(&l)) + specular.getArr()[2] * lights.at(i).getCol().getColor().getArr()[0] * std::powf(std::max(0.0f, n.dotProduct(&h)), phong);
+		light[0] = light[0] + diffuse.getArr()[0] * lights.at(i).getCol().getColor().getArr()[0] * std::abs(n.dotProduct(&l)) + specular.getArr()[0] * lights.at(i).getCol().getColor().getArr()[0] * std::powf(std::abs(n.dotProduct(&h)), phong);
+		light[1] = light[1] + diffuse.getArr()[1] * lights.at(i).getCol().getColor().getArr()[1] * std::abs(n.dotProduct(&l)) + specular.getArr()[1] * lights.at(i).getCol().getColor().getArr()[0] * std::powf(std::abs(n.dotProduct(&h)), phong);
+		light[2] = light[2] + diffuse.getArr()[2] * lights.at(i).getCol().getColor().getArr()[2] * std::abs(n.dotProduct(&l)) + specular.getArr()[2] * lights.at(i).getCol().getColor().getArr()[0] * std::powf(std::abs(n.dotProduct(&h)), phong);
 
 		//this is the "wrong" way, with l being the light's location
 		/*vect t = vect(this->eye.getArr()[0] - v.getArr()[0], this->eye.getArr()[1] - v.getArr()[1], this->eye.getArr()[2] - v.getArr()[2]);

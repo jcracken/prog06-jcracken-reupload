@@ -20,6 +20,7 @@
 
 class scene { //main class, used to render everything
   private:
+	bool once;
     int width;
     int height;
     vect4 eye;
@@ -53,12 +54,14 @@ class scene { //main class, used to render everything
 	vect** pLocs;
 	std::vector<light> lights;
 	std::vector<obj> objects;
+	std::vector<obj> oldObj;
 	std::vector<int> constraints;
 	std::vector<std::vector<color>> gColor;
 	std::vector<std::vector<color>> fColor;
 	std::vector<std::vector<color>> pColor;
 	std::vector<std::vector<vect>> pNorms;
 	std::vector<std::vector<vect>> forces;
+	std::vector<std::vector<vect>> velocity;
 	std::vector<std::vector<std::vector<float>>> dist;
 	vect shading(vect n, vect v, vect ambient, vect diffuse, vect specular, float phong);
 	void genPixelData(float imageHeight, float imageWidth);
