@@ -295,12 +295,6 @@ void scene::setup() {
 		oldObj.push_back(objects.at(i));
 		std::vector<vect>* t = this->objects.at(i).getPoints();
 		std::vector<std::vector<int>>* conns = objects.at(i).getPointConns();
-		for (unsigned int j = 0; j < t->size(); j++) {
-			vect4 t1 = vect4(t->at(j), 1.0);
-			M.mult(&t1, &mTemp);
-			t->at(j) = vect(mTemp.getVal(0, 0) / mTemp.getVal(3, 0), mTemp.getVal(1, 0) / mTemp.getVal(3, 0), mTemp.getVal(2, 0) / mTemp.getVal(3, 0));
-		}
-		objects.at(i).storeData();
 		this->dist.push_back(std::vector<std::vector<float>>());
 		for (int j = 0; j < t->size(); j++) {
 			temp1 = t->at(j).getArr();
@@ -310,6 +304,12 @@ void scene::setup() {
 				this->dist.at(i).at(j).push_back(sqrt(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0)));
 			}
 		}
+		for (unsigned int j = 0; j < t->size(); j++) {
+			vect4 t1 = vect4(t->at(j), 1.0);
+			M.mult(&t1, &mTemp);
+			t->at(j) = vect(mTemp.getVal(0, 0) / mTemp.getVal(3, 0), mTemp.getVal(1, 0) / mTemp.getVal(3, 0), mTemp.getVal(2, 0) / mTemp.getVal(3, 0));
+		}
+		objects.at(i).storeData();
 	}
 }
 
@@ -423,9 +423,13 @@ void scene::phys() {
 			temp1 = p->at(j).getArr();
 			for (int k = 0; k < conns->at(j).size(); k++) {
 				temp2 = p->at(conns->at(j).at(k)).getArr();
-				temp[0] = temp[0] + this->springConst * (powf(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0), 0.5) - dist.at(i).at(j).at(k)) * (temp2[0] - temp1[0]) / (powf(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0), 0.5));
-				temp[1] = temp[1] + this->springConst * (powf(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0), 0.5) - dist.at(i).at(j).at(k)) * (temp2[1] - temp1[1]) / (powf(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0), 0.5));
-				temp[2] = temp[2] + this->springConst * (powf(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0), 0.5) - dist.at(i).at(j).at(k)) * (temp2[2] - temp1[2]) / (powf(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0), 0.5));
+				temp[0] = temp[0] + this->springConst * (sqrt(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0)) - dist.at(i).at(j).at(k)) * (temp2[0] - temp1[0]) / (sqrt(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0)));
+				temp[1] = temp[1] + this->springConst * (sqrt(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0)) - dist.at(i).at(j).at(k)) * (temp2[1] - temp1[1]) / (sqrt(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0)));
+				temp[2] = temp[2] + this->springConst * (sqrt(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0)) - dist.at(i).at(j).at(k)) * (temp2[2] - temp1[2]) / (sqrt(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0)));
+
+				/*temp[0] = temp[0] + this->springConst * (sqrt(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0)) - (temp2[0] - temp1[0])) * (temp2[0] - temp1[0]) / (sqrt(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0)));
+				temp[1] = temp[1] + this->springConst * (sqrt(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0)) - (temp2[1] - temp1[1])) * (temp2[1] - temp1[1]) / (sqrt(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0)));
+				temp[2] = temp[2] + this->springConst * (sqrt(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0)) - (temp2[2] - temp1[2])) * (temp2[2] - temp1[2]) / (sqrt(powf(temp2[0] - temp1[0], 2.0) + powf(temp2[1] - temp1[1], 2.0) + powf(temp2[2] - temp1[2], 2.0)));*/
 			}
 			forces.at(i).push_back(vect(temp[0], temp[1], temp[2]));
 			temp = accel.getArr();
@@ -440,6 +444,7 @@ void scene::upLocs() {
 	float* vel;
 	float *temp, *temp1;
 	matrix mTemp;
+	once = true;
 	for (int i = 0; i < oldObj.size(); i++) {
 		p = oldObj.at(i).getPoints();
 		for (int j = 0; j < p->size(); j++) {
